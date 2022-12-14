@@ -55,7 +55,6 @@ static void listRecursively(File& path, bool show);
 static void listRootRecursively(fs::FS& fs, bool show);
 
 static String getEspChipId();
-static String getEspType();
 static String getFlashChipMode();
 
 /******************************************************************************
@@ -138,7 +137,7 @@ void loop()
     unsigned long   delta           = 0;
 
     ESP_LOGI(TAG, "ESP chip id    : %s", getEspChipId().c_str());
-    ESP_LOGI(TAG, "ESP type       : %s", getEspType().c_str());
+    ESP_LOGI(TAG, "ESP type       : %s", CONFIG_IDF_TARGET);
     ESP_LOGI(TAG, "ESP chip rev.  : %u", ESP.getChipRevision());
     ESP_LOGI(TAG, "ESP cpu freq.  : %u MHz", ESP.getCpuFreqMHz());
     ESP_LOGI(TAG, "Flash chip mode: %s", getFlashChipMode().c_str());
@@ -365,27 +364,6 @@ static String getEspChipId()
 
     result = chipIdStr;
 
-    return result;
-}
-
-/**
- * Get ESP type.
- *
- * @return ESP type
- */
-static String getEspType()
-{
-    String result;
-
-#if defined(ESP32)
-    result = "ESP32";
-#elif defined(ESP32S2)
-    result = "ESP32S2";
-#elif defined(ESP32S3)
-    result = "ESP32S3";
-#else
-    result ="UNKNOWN";
-#endif
     return result;
 }
 
