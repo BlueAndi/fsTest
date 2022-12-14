@@ -1,6 +1,6 @@
 /* MIT License
  *
- * Copyright (c) 2019 - 2022 Andreas Merkle <web@blue-andi.de>
+ * Copyright (c) 2022 Andreas Merkle <web@blue-andi.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,10 @@
 static void createDirectoryRecursively(fs::FS& fs, const String& path, const String& baseDirName, const String& baseFileName, uint32_t dirDepth, uint32_t fileCnt);
 static void listRecursively(File& path, bool show);
 static void listRootRecursively(fs::FS& fs, bool show);
+
+static String getEspChipId();
+static String getEspType();
+static String getFlashChipMode();
 
 /******************************************************************************
  * Variables
@@ -132,6 +136,15 @@ void loop()
     unsigned long   timestampEnd    = 0;
     unsigned long   timestampBegin  = 0;
     unsigned long   delta           = 0;
+
+    ESP_LOGI(TAG, "ESP chip id    : %s", getEspChipId().c_str());
+    ESP_LOGI(TAG, "ESP type       : %s", getEspType().c_str());
+    ESP_LOGI(TAG, "ESP chip rev.  : %u", ESP.getChipRevision());
+    ESP_LOGI(TAG, "ESP cpu freq.  : %u MHz", ESP.getCpuFreqMHz());
+    ESP_LOGI(TAG, "Flash chip mode: %s", getFlashChipMode().c_str());
+    ESP_LOGI(TAG, "Flash chip size: 0x%08X byte", ESP.getFlashChipSize());
+    ESP_LOGI(TAG, "Flash freq.    : %u MHz", ESP.getFlashChipSpeed() / (1000U * 1000U));
+    ESP_LOGI(TAG, "ESP SDK version: %s", ESP.getSdkVersion());
 
     /* ---------- */
 
@@ -333,4 +346,91 @@ static void listRootRecursively(fs::FS& fs, bool show)
     {
         listRecursively(fdRoot, show);
     }
+}
+
+/**
+ * Get ESP chip id.
+ *
+ * @return ESP chip id
+ */
+static String getEspChipId()
+{
+    String      result;
+    uint64_t    chipId      = ESP.getEfuseMac();
+    uint32_t    highPart    = (chipId >> 32U) & 0x0000ffffU;
+    uint32_t    lowPart     = (chipId >>  0U) & 0xffffffffU;
+    char        chipIdStr[13];
+
+    (void)snprintf(chipIdStr, sizeof(chipIdStr)/sizeof(chipIdStr[0]), "%04X%08X", highPart, lowPart);
+
+    result = chipIdStr;
+
+    return result;
+}
+
+/**
+ * Get ESP type.
+ *
+ * @return ESP type
+ */
+static String getEspType()
+{
+    String result;
+
+#if defined(ESP32)
+    result = "ESP32";
+#elif defined(ESP32S2)
+    result = "ESP32S2";
+#elif defined(ESP32S3)
+    result = "ESP32S3";
+#else
+    result ="UNKNOWN";
+#endif
+    return result;
+}
+
+/**
+ * Get flash chip mode.
+ *
+ * @return Flash chip mode.
+ */
+static String getFlashChipMode()
+{
+    String result;
+
+    switch(ESP.getFlashChipMode())
+    {
+    case FM_QIO:
+        result = "QUIO";
+        break;
+
+    case FM_QOUT:
+        result = "QOUT";
+        break;
+
+    case FM_DIO:
+        result = "DIO";
+        break;
+
+    case FM_DOUT:
+        result = "DOUT";
+        break;
+
+    case FM_FAST_READ:
+        result = "FAST_READ";
+        break;
+
+    case FM_SLOW_READ:
+        result = "SLOW_READ";
+        break;
+
+    case FM_UNKNOWN:
+        /* fallthrough */
+
+    default:
+        result = "UNKNOWN";
+        break;
+    }
+
+    return result;
 }
